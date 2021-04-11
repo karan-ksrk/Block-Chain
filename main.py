@@ -1,5 +1,7 @@
 import datetime
 import hashlib
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 
 class Transaction:
@@ -37,7 +39,8 @@ class Chain:
         return self.chain[-1]
 
     def addBlock(self, transaction: Transaction, senderPublicKey: str, signature: str):
-        newBlock = Block(self.lastBlock.hash, transaction)
+        self.verifier = hashlib.sha256(senderPublicKey, signature)
+        newBlock = Block(self.lastBlock().hash, transaction)
         self.chain.append(newBlock)
 
 
@@ -46,7 +49,19 @@ class Wallet:
     privateKey: str
 
     def __init__(self):
-        self.keypair = hashlib.
+        self.keypair = rsa.RSAPublicKey(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
+        self.privateKey = self.keypair.public_key()
+
+    def sendMoney(self, amount, receiverPublicKey):
+        self.transaction = Transaction(
+            amount, self.publicKey, receiverPublicKey)
+
+        self.signature = hashlib.sha256(bytes(self.privateKey))
+        Chain.addBlock(self.transaction, self.publicKey, self.signature)
 
 
 t1 = Transaction(100, "karan", "harman")
